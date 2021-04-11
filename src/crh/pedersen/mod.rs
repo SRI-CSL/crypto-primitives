@@ -142,7 +142,7 @@ impl FixedLengthCRH for Blake2s {
         let mut h = B2s::new();
         h.update(parameters.seed.as_ref());
         h.update(input.as_ref());
-        let mut result = [0u8];
+        let mut result = [0u8;1];
         result.copy_from_slice(&h.finalize());
 	Ok(result)
         
