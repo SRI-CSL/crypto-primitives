@@ -1,4 +1,5 @@
 use crate::{Error, Vec};
+use digest::Digest;
 use ark_std::rand::Rng;
 use ark_std::{
     fmt::{Debug, Formatter, Result as FmtResult},
@@ -11,7 +12,8 @@ use crate::crh::FixedLengthCRH;
 use ark_ec::ProjectiveCurve;
 use ark_ff::{Field, ToConstraintField};
 use ark_std::cfg_chunks;
-
+use crate::prf::blake2s::Blake2s;
+use blake2::{Blake2s as B2s};
 #[cfg(feature = "r1cs")]
 pub mod constraints;
 
@@ -117,6 +119,33 @@ impl<C: ProjectiveCurve, W: Window> FixedLengthCRH for CRH<C, W> {
         end_timer!(eval_time);
 
         Ok(result.into())
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct Blake2Params{
+    seed: [u8;32]
+}
+impl FixedLengthCRH for Blake2s {
+    //stub
+    const INPUT_SIZE_BITS: usize = 0;
+    type Output = [u8;1];
+    type Parameters = Blake2Params;
+
+    fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
+	//use rng to make seed of [u8;32]
+	let seed: [u8; 32] = rng.gen();
+        Ok(Blake2Params { seed })
+    }
+
+    fn evaluate(parameters: &Self::Parameters, input: &[u8]) -> Result<Self::Output, Error> {
+        let mut h = B2s::new();
+        h.update(parameters.seed.as_ref());
+        h.update(input.as_ref());
+        let mut result = [0u8];
+        result.copy_from_slice(&h.finalize());
+	Ok(result)
+        
     }
 }
 
