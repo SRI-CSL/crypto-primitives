@@ -129,7 +129,7 @@ pub struct Blake2Params{
 impl FixedLengthCRH for Blake2s {
     //stub
     const INPUT_SIZE_BITS: usize = 0;
-    type Output = [u8;1];
+    type Output = [u8;32];
     type Parameters = Blake2Params;
 
     fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
