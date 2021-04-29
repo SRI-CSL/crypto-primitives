@@ -2,14 +2,15 @@ use crate::Vec;
 use ark_std::convert::TryFrom;
 use blake2::{Blake2s as B2s, VarBlake2s};
 use digest::Digest;
-
+use ark_serialize::*;
+use ark_serialize_derive::*;
 use super::PRF;
 use crate::CryptoError;
 
 #[cfg(feature = "r1cs")]
 pub mod constraints;
 
-#[derive(Clone)]
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug)]
 pub struct Blake2s;
 
 impl PRF for Blake2s {

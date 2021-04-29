@@ -1,19 +1,24 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(
+/*#![deny(
     warnings,
     unused,
     future_incompatible,
     nonstandard_style,
     rust_2018_idioms,
     // missing_docs
-)]
+)]*/
 #![forbid(unsafe_code)]
-
 #[macro_use]
 extern crate ark_std;
 
 #[macro_use]
 extern crate derivative;
+#[macro_use]
+#[cfg(feature="derive")]
+extern crate ark_serialize_derive;
+
+
+
 
 pub(crate) use ark_std::{borrow::ToOwned, boxed::Box, vec::Vec};
 

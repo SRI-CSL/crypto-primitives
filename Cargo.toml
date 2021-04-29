@@ -19,7 +19,8 @@ ark-ff = { git = "https://github.com/SRI-CSL/algebra", default-features = false 
 ark-ec = { git = "https://github.com/SRI-CSL/algebra", default-features = false }
 ark-std = { git = "https://github.com/SRI-CSL/utils", default-features = false }
 ark-relations = { git = "https://github.com/SRI-CSL/snark", default-features = false }
-
+ark-serialize = { git = "https://github.com/SRI-CSL/algebra", default-features = false}
+ark-serialize-derive = { git = "https://github.com/SRI-CSL/algebra", default-features = false}
 blake2 = { version = "0.9", default-features = false }
 digest = "0.9"
 

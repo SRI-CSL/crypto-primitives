@@ -1,22 +1,20 @@
 use crate::{crh::FixedLengthCRH, Vec};
 use ark_ff::bytes::ToBytes;
 use ark_std::fmt;
-
+use ark_serialize::*;
+use ark_serialize_derive::*;
 #[cfg(feature = "r1cs")]
 pub mod constraints;
-
 pub trait Config {
     const HEIGHT: usize;
     type H: FixedLengthCRH;
 }
 
+
 /// Stores the hashes of a particular path (in order) from leaf to root.
 /// Our path `is_left_child()` if the boolean in `path` is true.
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = "P: Config"),
-    Debug(bound = "P: Config, <P::H as FixedLengthCRH>::Output: fmt::Debug")
-)]
+
+
 pub struct Path<P: Config> {
     pub(crate) path: Vec<(Digest<P>, Digest<P>)>,
 }
