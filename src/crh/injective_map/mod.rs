@@ -1,5 +1,5 @@
 use crate::{CryptoError, Error};
-use ark_ff::bytes::ToBytes;
+use ark_ff::bytes::{ToBytes,FromBytes};
 use ark_std::rand::Rng;
 use ark_std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
@@ -14,7 +14,7 @@ use ark_ec::{
 pub mod constraints;
 
 pub trait InjectiveMap<C: ProjectiveCurve> {
-    type Output: ToBytes + Clone + Eq + Hash + Default + Debug;
+    type Output: ToBytes + Clone + Eq + Hash + Default + Debug + FromBytes;
 
     fn injective_map(ge: &C::Affine) -> Result<Self::Output, CryptoError>;
 }
