@@ -1,6 +1,6 @@
 use crate::{crh::FixedLengthCRH, Vec};
-use ark_ff::bytes::ToBytes;
-use ark_std::fmt;
+use ark_ff::bytes::{ToBytes,FromBytes};
+use ark_std::{fmt,io::{Read,Result as IoResult,Write}};
 use ark_serialize::*;
 use ark_serialize_derive::*;
 #[cfg(feature = "r1cs")]
@@ -17,6 +17,23 @@ pub trait Config {
 
 pub struct Path<P: Config> {
     pub(crate) path: Vec<(Digest<P>, Digest<P>)>,
+}
+
+impl<C:Config> ToBytes for Path<C>{
+    fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
+	for p in &self.path{
+	    p.0.write(&mut writer)?;
+	    p.1.write(&mut writer)?;
+	}
+	Ok(())
+    }
+}
+
+impl<C:Config> FromBytes for Path<C>{
+    fn read<R:Read>(mut reader:R) -> IoResult<Self>{
+	let output = Self::read(&mut reader)?;
+	Ok(output)
+    }
 }
 
 pub type Parameters<P> = <<P as Config>::H as FixedLengthCRH>::Parameters;
