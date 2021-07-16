@@ -1,6 +1,7 @@
 use crate::{Error, Vec};
+use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use digest::Digest;
-use ark_std::rand::Rng;
+use ark_std::{rand::Rng,io::{Read,Write}};
 use ark_std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     marker::PhantomData,
@@ -126,6 +127,7 @@ impl<C: ProjectiveCurve, W: Window> FixedLengthCRH for CRH<C, W> {
 pub struct Blake2Params{
     seed: [u8;32]
 }
+
 impl FixedLengthCRH for Blake2s {
     //stub
     const INPUT_SIZE_BITS: usize = 0;

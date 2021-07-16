@@ -1,5 +1,6 @@
 use crate::{CryptoError, Error};
 use ark_ff::bytes::{ToBytes,FromBytes};
+use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use ark_std::rand::Rng;
 use ark_std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
@@ -14,7 +15,7 @@ use ark_ec::{
 pub mod constraints;
 
 pub trait InjectiveMap<C: ProjectiveCurve> {
-    type Output: ToBytes + Clone + Eq + Hash + Default + Debug + FromBytes;
+    type Output: ToBytes + Clone + Eq + Hash + Default + Debug + FromBytes + CanonicalSerialize;
 
     fn injective_map(ge: &C::Affine) -> Result<Self::Output, CryptoError>;
 }

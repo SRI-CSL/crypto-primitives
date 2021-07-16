@@ -1,7 +1,7 @@
 use ark_ff::bytes::{ToBytes,FromBytes};
 use ark_std::hash::Hash;
 use ark_std::rand::Rng;
-
+use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 pub mod bowe_hopwood;
 pub mod injective_map;
 pub mod pedersen;
