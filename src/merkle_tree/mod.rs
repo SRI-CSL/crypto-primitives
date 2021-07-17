@@ -29,10 +29,22 @@ impl<C:Config> ToBytes for Path<C>{
     }
 }
 
+
+
+
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
-	let output = Self::read(&mut reader)?;
-	Ok(output)
+	let mut output_1 = Digest::<C>::read(&mut reader).ok();
+	let mut output_2 = Digest::<C>::read(&mut reader).ok();
+	let mut output_vec = Vec::new();
+	while let (Some(one),Some(two)) = (output_1 , output_2){
+	    output_vec.push((one,two));
+	    output_1 = Digest::<C>::read(&mut reader).ok();
+	    output_2 = Digest::<C>::read(&mut reader).ok();
+	}
+	Ok(Path{
+	    path:output_vec
+	})
     }
 }
 
