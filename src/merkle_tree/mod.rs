@@ -38,6 +38,8 @@ impl<C:Config> FromBytes for Path<C>{
 	let mut output_2 = Digest::<C>::read(&mut reader).ok();
 	let mut output_vec = Vec::new();
 	while let (Some(one),Some(two)) = (output_1 , output_2){
+	    println!("output 1 {:?}", output_1);
+	    println!("output 2 {:?}", output_2);
 	    output_vec.push((one,two));
 	    output_1 = Digest::<C>::read(&mut reader).ok();
 	    output_2 = Digest::<C>::read(&mut reader).ok();
