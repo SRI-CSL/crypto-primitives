@@ -36,11 +36,10 @@ impl<C:Config> ToBytes for Path<C>{
 
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
-	let marker = <[u32;1]>::read(&mut reader)?;
-	assert_eq!(marker[0],1930468683u32);
-	let mut output_1 = Digest::<C>::read(&mut reader).ok();
+	let mut pre_output = Digest::<C>::read(&mut reader)?;
 	
 	let mut output_vec:Vec<Digest<C>> = Vec::new();
+	let mut output_1 = Some(pre_output);
 	while let Some(o) = output_1{
 	    output_vec.push(o);
 	    output_1 = Digest::<C>::read(&mut reader).ok();
