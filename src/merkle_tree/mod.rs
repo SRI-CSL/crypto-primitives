@@ -35,6 +35,10 @@ impl<C:Config> ToBytes for Path<C>{
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
 	let mut output_1 = Digest::<C>::read(&mut reader).ok();
+	if(output_1.is_none()){
+	    return Err(std::io::Error::new(std::io::ErrorKind::Other, "oh no!"));
+	}
+    
 	let mut output_vec = Vec::new();
 	while let Some(o) = output_1{
 	    output_vec.push(o);
