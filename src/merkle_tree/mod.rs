@@ -21,8 +21,6 @@ pub struct Path<P: Config> {
 
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
-	let marker:[u32;1] = [1930468683u32];
-	marker.write(&mut writer);
 	for p in &self.path{
 	    p.0.write(&mut writer)?;
 	    p.1.write(&mut writer)?;
