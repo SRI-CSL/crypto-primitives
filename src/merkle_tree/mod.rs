@@ -18,7 +18,11 @@ pub trait Config {
 pub struct Path<P: Config> {
     pub(crate) path: Vec<(Digest<P>, Digest<P>)>,
 }
-
+impl<C:Config> Path<C>{
+    pub fn get_length(&self) -> usize{
+	self.path.len()
+    }
+}
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
 	for p in &self.path{
