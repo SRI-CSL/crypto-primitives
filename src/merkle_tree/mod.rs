@@ -21,6 +21,8 @@ pub struct Path<P: Config> {
 
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
+	let marker:u32 = 823u32;
+	marker.write(&mut writer);
 	for p in &self.path{
 	    p.0.write(&mut writer)?;
 	    p.1.write(&mut writer)?;
@@ -34,10 +36,11 @@ impl<C:Config> ToBytes for Path<C>{
 
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
-	let mut pre_output:Digest::<C> = Digest::<C>::read(&mut reader)?;
+	let marker = u32::read(&mut reader)?;
+	assert_eq!(marker,823u32);
+	let mut output_1 = Digest::<C>::read(&mut reader).ok();
 	
 	let mut output_vec:Vec<Digest<C>> = Vec::new();
-	let mut output_1 = Some(pre_output); //this means it did not throw an error on the first try
 	while let Some(o) = output_1{
 	    output_vec.push(o);
 	    output_1 = Digest::<C>::read(&mut reader).ok();
