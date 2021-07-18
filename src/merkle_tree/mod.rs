@@ -35,15 +35,20 @@ impl<C:Config> ToBytes for Path<C>{
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
 	let mut output_1 = Digest::<C>::read(&mut reader).ok();
-	let mut output_2 = Digest::<C>::read(&mut reader).ok();
 	let mut output_vec = Vec::new();
-	while let (Some(one),Some(two)) = (output_1 , output_2){
-	    output_vec.push((one,two));
+	while let Some(o) = output_1{
+	    output_vec.push(o);
 	    output_1 = Digest::<C>::read(&mut reader).ok();
-	    output_2 = Digest::<C>::read(&mut reader).ok();
+	}
+	//now split into pairs
+	let mut pairs = Vec::new();
+	let mut i = 0;
+	while i < output_vec.len(){
+	    pairs.push((output_vec[i].clone(),output_vec[i+1].clone()));
+	    i = i + 2;
 	}
 	Ok(Path{
-	    path:output_vec
+	    path:pairs
 	})
     }
 }
