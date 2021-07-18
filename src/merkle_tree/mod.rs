@@ -30,7 +30,18 @@ impl<C:Config> ToBytes for Path<C>{
 }
 
 
-
+impl<C:Config> Clone for Path<C>{
+    //clone will clone each digest
+    fn clone(&self) -> Self{
+	let mut output = Vec::new();
+	for s in &self.path{
+	    output.push((s.0.clone(),s.1.clone()));
+	}
+	Path{
+	    path: output
+	}
+    }
+}
 
 impl<C:Config> FromBytes for Path<C>{
     fn read<R:Read>(mut reader:R) -> IoResult<Self>{
