@@ -44,7 +44,7 @@ impl<C:Config> FromBytes for Path<C>{
 	let mut pairs = Vec::new();
 	let mut i = 0;
 	assert_eq!(pairs.len() % 2, 0);
-	while i < output_vec.len(){
+	while i < output_vec.len() - 1{
 	    pairs.push((output_vec[i].clone(),output_vec[i+1].clone()));
 	    i = i + 2;
 	}
