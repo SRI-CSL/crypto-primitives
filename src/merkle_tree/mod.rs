@@ -22,6 +22,10 @@ impl<C:Config> Path<C>{
     pub fn get_length(&self) -> usize{
 	self.path.len()
     }
+    pub fn get_path(&self) -> Vec<(Digest<C>,Digest<C>)>{
+	let path = self.clone();
+	path.path
+    }
 }
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
@@ -57,6 +61,7 @@ impl<C:Config> FromBytes for Path<C>{
 	    output_vec.push(o);
 	    output_1 = Digest::<C>::read(&mut reader).ok();
 	}
+	
 	//now split into pairs
 	let mut pairs = Vec::new();
 	let mut i = 0;
