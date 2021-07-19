@@ -26,6 +26,11 @@ impl<C:Config> Path<C>{
 	let path = self.clone();
 	path.path
     }
+    pub fn set_path(path : Vec<(Digest<C>,Digest<C>)>) -> Self{
+	Path{
+	    path: path
+	}
+    }
 }
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
