@@ -32,6 +32,12 @@ impl<C:Config> Path<C>{
 	}
     }
 }
+impl<C:Config> PartialEq for Path<C>{
+    fn eq(&self, other: &Self) -> bool {
+	self.path == other.path
+    }
+}
+impl<C:Config> Eq for Path<C> {}
 impl<C:Config> ToBytes for Path<C>{
     fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
 	for p in &self.path{
