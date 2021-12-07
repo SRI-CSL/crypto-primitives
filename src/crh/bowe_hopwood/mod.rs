@@ -1,3 +1,7 @@
+//! The [Bowe-Hopwood-Pedersen] hash is a optimized variant of the Pedersen CRH for
+//! specific Twisted Edwards (TE) curves. See [Section 5.4.17 of the Zcash protocol specification](https://raw.githubusercontent.com/zcash/zips/master/protocol/protocol.pdf#concretepedersenhash) for a formal description of this hash function, specialized for the Jubjub curve.
+//! The implementation in this repository is generic across choice of TE curves.
+
 use crate::{Error, Vec};
 use ark_std::rand::Rng;
 use ark_std::{
@@ -8,11 +12,13 @@ use ark_std::{
 use rayon::prelude::*;
 
 use super::pedersen;
-use crate::crh::FixedLengthCRH;
+use crate::crh::{CRHScheme, TwoToOneCRHScheme};
 use ark_ec::{
     twisted_edwards_extended::GroupProjective as TEProjective, ProjectiveCurve, TEModelParameters,
 };
 use ark_ff::{biginteger::BigInteger, fields::PrimeField};
+use ark_serialize::CanonicalSerialize;
+use ark_std::borrow::Borrow;
 use ark_std::cfg_chunks;
 use ark_std::UniformRand;
 
@@ -50,9 +56,23 @@ impl<P: TEModelParameters, W: pedersen::Window> CRH<P, W> {
     }
 }
 
-impl<P: TEModelParameters, W: pedersen::Window> FixedLengthCRH for CRH<P, W> {
+pub struct TwoToOneCRH<P: TEModelParameters, W: pedersen::Window> {
+    group: PhantomData<P>,
+    window: PhantomData<W>,
+}
+
+impl<P: TEModelParameters, W: pedersen::Window> TwoToOneCRH<P, W> {
     const INPUT_SIZE_BITS: usize = pedersen::CRH::<TEProjective<P>, W>::INPUT_SIZE_BITS;
-    type Output = TEProjective<P>;
+    const HALF_INPUT_SIZE_BITS: usize = Self::INPUT_SIZE_BITS / 2;
+    pub fn create_generators<R: Rng>(rng: &mut R) -> Vec<Vec<TEProjective<P>>> {
+        CRH::<P, W>::create_generators(rng)
+    }
+}
+
+impl<P: TEModelParameters, W: pedersen::Window> CRHScheme for CRH<P, W> {
+    type Input = [u8];
+
+    type Output = P::BaseField;
     type Parameters = Parameters<P>;
 
     fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
@@ -88,7 +108,11 @@ impl<P: TEModelParameters, W: pedersen::Window> FixedLengthCRH for CRH<P, W> {
         Ok(Self::Parameters { generators })
     }
 
-    fn evaluate(parameters: &Self::Parameters, input: &[u8]) -> Result<Self::Output, Error> {
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        input: T,
+    ) -> Result<Self::Output, Error> {
+        let input = input.borrow();
         let eval_time = start_timer!(|| "BoweHopwoodPedersenCRH::Eval");
 
         if (input.len() * 8) > W::WINDOW_SIZE * W::NUM_WINDOWS * CHUNK_SIZE {
@@ -155,7 +179,60 @@ impl<P: TEModelParameters, W: pedersen::Window> FixedLengthCRH for CRH<P, W> {
 
         end_timer!(eval_time);
 
-        Ok(result)
+        Ok(result.into_affine().x)
+    }
+}
+
+impl<P: TEModelParameters, W: pedersen::Window> TwoToOneCRHScheme for TwoToOneCRH<P, W> {
+    type Input = [u8];
+
+    type Output = P::BaseField;
+    type Parameters = Parameters<P>;
+
+    fn setup<R: Rng>(r: &mut R) -> Result<Self::Parameters, Error> {
+        CRH::<P, W>::setup(r)
+    }
+
+    /// A simple implementation method: just concat the left input and right input together
+    ///
+    /// `evaluate` requires that `left_input` and `right_input` are of equal length.
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        let left_input = left_input.borrow();
+        let right_input = right_input.borrow();
+        assert_eq!(
+            left_input.len(),
+            right_input.len(),
+            "left and right input should be of equal length"
+        );
+        // check overflow
+
+        debug_assert!(left_input.len() * 8 <= Self::HALF_INPUT_SIZE_BITS);
+        debug_assert!(right_input.len() * 8 <= Self::HALF_INPUT_SIZE_BITS);
+
+        let mut buffer = vec![0u8; Self::INPUT_SIZE_BITS / 8];
+
+        buffer
+            .iter_mut()
+            .zip(left_input.iter().chain(right_input.iter()))
+            .for_each(|(b, l_b)| *b = *l_b);
+
+        CRH::<P, W>::evaluate(parameters, buffer)
+    }
+
+    fn compress<T: Borrow<Self::Output>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        Self::evaluate(
+            parameters,
+            crate::to_unchecked_bytes!(left_input)?,
+            crate::to_unchecked_bytes!(right_input)?,
+        )
     }
 }
 
@@ -172,8 +249,8 @@ impl<P: TEModelParameters> Debug for Parameters<P> {
 #[cfg(test)]
 mod test {
     use crate::{
-        crh::{bowe_hopwood::CRH, pedersen::Window},
-        FixedLengthCRH,
+        crh::{bowe_hopwood, pedersen::Window},
+        CRHScheme,
     };
     use ark_ed_on_bls12_381::EdwardsParameters;
     use ark_std::test_rng;
@@ -188,9 +265,8 @@ mod test {
         }
 
         let rng = &mut test_rng();
-        let params = <CRH<EdwardsParameters, TestWindow> as FixedLengthCRH>::setup(rng).unwrap();
-        let _ =
-            <CRH<EdwardsParameters, TestWindow> as FixedLengthCRH>::evaluate(&params, &[1, 2, 3])
-                .unwrap();
+        let params = bowe_hopwood::CRH::<EdwardsParameters, TestWindow>::setup(rng).unwrap();
+        let _ = bowe_hopwood::CRH::<EdwardsParameters, TestWindow>::evaluate(&params, [1, 2, 3])
+            .unwrap();
     }
 }

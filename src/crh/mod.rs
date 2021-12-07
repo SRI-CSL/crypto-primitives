@@ -1,7 +1,8 @@
-use ark_ff::bytes::{ToBytes,FromBytes};
+#![allow(clippy::upper_case_acronyms)]
+
+use ark_ff::bytes::ToBytes;
 use ark_std::hash::Hash;
 use ark_std::rand::Rng;
-use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 pub mod bowe_hopwood;
 pub mod injective_map;
 pub mod pedersen;
@@ -11,15 +12,63 @@ use crate::Error;
 
 #[cfg(feature = "r1cs")]
 pub mod constraints;
+
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::borrow::Borrow;
 #[cfg(feature = "r1cs")]
 pub use constraints::*;
 
-pub trait FixedLengthCRH {
-    const INPUT_SIZE_BITS: usize;
-
-    type Output: ToBytes + Clone + Eq + core::fmt::Debug + Hash + Default + FromBytes;
-    type Parameters: Clone + Default;
+/// Interface to CRH. Note that in this release, while all implementations of `CRH` have fixed length,
+/// variable length CRH may also implement this trait in future.
+pub trait CRHScheme {
+    type Input: ?Sized;
+    type Output: ToBytes
+        + Clone
+        + Eq
+        + core::fmt::Debug
+        + Hash
+        + Default
+        + CanonicalSerialize
+        + CanonicalDeserialize;
+    type Parameters: Clone;
 
     fn setup<R: Rng>(r: &mut R) -> Result<Self::Parameters, Error>;
-    fn evaluate(parameters: &Self::Parameters, input: &[u8]) -> Result<Self::Output, Error>;
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        input: T,
+    ) -> Result<Self::Output, Error>;
+}
+
+
+
+/// CRH used by merkle tree inner hash. Merkle tree will convert leaf output to bytes first.
+pub trait TwoToOneCRHScheme {
+    /// Raw Input type of TwoToOneCRH
+    type Input: ?Sized;
+    /// Raw Output type of TwoToOneCRH
+    type Output: ToBytes
+	+ FromBytes
+        + Clone
+        + Eq
+        + core::fmt::Debug
+        + Hash
+        + Default
+        + CanonicalSerialize
+        + CanonicalDeserialize;
+    type Parameters: Clone + Default;
+
+
+    fn setup<R: Rng>(r: &mut R) -> Result<Self::Parameters, Error>;
+
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error>;
+
+    fn compress<T: Borrow<Self::Output>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error>;
 }

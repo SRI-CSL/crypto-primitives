@@ -1,6 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-/*#![deny(
-    warnings,
+
+
+/*
+#![deny(
     unused,
     future_incompatible,
     nonstandard_style,
@@ -21,17 +23,20 @@ extern crate ark_serialize_derive;
 
 
 pub(crate) use ark_std::{borrow::ToOwned, boxed::Box, vec::Vec};
+mod macros;
 
 pub mod commitment;
 pub mod crh;
 pub mod merkle_tree;
+
+pub mod encryption;
 pub mod prf;
 pub mod signature;
 pub mod snark;
 
 pub use self::{
     commitment::CommitmentScheme,
-    crh::FixedLengthCRH,
+    crh::CRHScheme,
     merkle_tree::{MerkleTree, Path},
     prf::PRF,
     signature::SignatureScheme,
@@ -40,7 +45,7 @@ pub use self::{
 
 #[cfg(feature = "r1cs")]
 pub use self::{
-    commitment::CommitmentGadget, crh::FixedLengthCRHGadget, merkle_tree::constraints::PathVar,
+    commitment::CommitmentGadget, crh::CRHSchemeGadget, merkle_tree::constraints::PathVar,
     prf::PRFGadget, signature::SigRandomizePkGadget, snark::SNARKGadget,
 };
 

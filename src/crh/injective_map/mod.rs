@@ -4,18 +4,21 @@ use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use ark_std::rand::Rng;
 use ark_std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use super::{pedersen, FixedLengthCRH};
+use super::{pedersen, CRHScheme, TwoToOneCRHScheme};
 use ark_ec::{
     models::{ModelParameters, TEModelParameters},
     twisted_edwards_extended::{GroupAffine as TEAffine, GroupProjective as TEProjective},
     ProjectiveCurve,
 };
-
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::borrow::Borrow;
+use ark_std::vec::Vec;
 #[cfg(feature = "r1cs")]
 pub mod constraints;
 
 pub trait InjectiveMap<C: ProjectiveCurve> {
-    type Output: ToBytes + Clone + Eq + Hash + Default + Debug + FromBytes + CanonicalSerialize;
+
+    type Output: ToBytes + Clone + Eq + Hash + Default + Debug + FromBytes + CanonicalSerialize + CanonicalDeserialize;
 
     fn injective_map(ge: &C::Affine) -> Result<Self::Output, CryptoError>;
 }
@@ -34,13 +37,13 @@ impl<P: TEModelParameters> InjectiveMap<TEProjective<P>> for TECompressor {
 pub struct PedersenCRHCompressor<C: ProjectiveCurve, I: InjectiveMap<C>, W: pedersen::Window> {
     _group: PhantomData<C>,
     _compressor: PhantomData<I>,
-    _crh: pedersen::CRH<C, W>,
+    _window: PhantomData<W>,
 }
 
-impl<C: ProjectiveCurve, I: InjectiveMap<C>, W: pedersen::Window> FixedLengthCRH
+impl<C: ProjectiveCurve, I: InjectiveMap<C>, W: pedersen::Window> CRHScheme
     for PedersenCRHCompressor<C, I, W>
 {
-    const INPUT_SIZE_BITS: usize = pedersen::CRH::<C, W>::INPUT_SIZE_BITS;
+    type Input = <pedersen::CRH<C, W> as CRHScheme>::Input;
     type Output = I::Output;
     type Parameters = pedersen::Parameters<C>;
 
@@ -51,10 +54,63 @@ impl<C: ProjectiveCurve, I: InjectiveMap<C>, W: pedersen::Window> FixedLengthCRH
         params
     }
 
-    fn evaluate(parameters: &Self::Parameters, input: &[u8]) -> Result<Self::Output, Error> {
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        input: T,
+    ) -> Result<Self::Output, Error> {
         let eval_time = start_timer!(|| "PedersenCRHCompressor::Eval");
         let result = I::injective_map(&pedersen::CRH::<C, W>::evaluate(parameters, input)?)?;
         end_timer!(eval_time);
         Ok(result)
+    }
+}
+
+pub struct PedersenTwoToOneCRHCompressor<
+    C: ProjectiveCurve,
+    I: InjectiveMap<C>,
+    W: pedersen::Window,
+> {
+    _group: PhantomData<C>,
+    _compressor: PhantomData<I>,
+    _window: PhantomData<W>,
+}
+
+impl<C: ProjectiveCurve, I: InjectiveMap<C>, W: pedersen::Window> TwoToOneCRHScheme
+    for PedersenTwoToOneCRHCompressor<C, I, W>
+{
+    type Input = <pedersen::TwoToOneCRH<C, W> as TwoToOneCRHScheme>::Input;
+    type Output = I::Output;
+    type Parameters = pedersen::Parameters<C>;
+
+    fn setup<R: Rng>(r: &mut R) -> Result<Self::Parameters, Error> {
+        pedersen::TwoToOneCRH::<C, W>::setup(r)
+    }
+
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        let eval_time = start_timer!(|| "PedersenCRHCompressor::Eval");
+        let result = I::injective_map(&pedersen::TwoToOneCRH::<C, W>::evaluate(
+            parameters,
+            left_input,
+            right_input,
+        )?)?;
+        end_timer!(eval_time);
+        Ok(result)
+    }
+
+    fn compress<T: Borrow<Self::Output>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        // convert output to input
+        Self::evaluate(
+            parameters,
+            crate::to_unchecked_bytes!(left_input)?,
+            crate::to_unchecked_bytes!(right_input)?,
+        )
     }
 }
