@@ -47,7 +47,6 @@ pub trait TwoToOneCRHScheme {
     type Input: ?Sized;
     /// Raw Output type of TwoToOneCRH
     type Output: ToBytes
-	+ FromBytes
         + Clone
         + Eq
         + core::fmt::Debug

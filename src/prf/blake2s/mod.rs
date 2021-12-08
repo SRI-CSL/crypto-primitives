@@ -11,7 +11,8 @@ pub mod constraints;
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug,Default)]
 pub struct Blake2s;
-
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug,Default)]
+pub struct TwoToOneBlake2s;
 impl PRF for Blake2s {
     type Input = [u8; 32];
     type Output = [u8; 32];

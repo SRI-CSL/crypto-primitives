@@ -15,7 +15,7 @@ use ark_ff::{Field, ToConstraintField};
 
 use ark_std::borrow::Borrow;
 use ark_std::cfg_chunks;
-use crate::prf::blake2s::Blake2s;
+use crate::prf::blake2s::{Blake2s,TwoToOneBlake2s};
 use blake2::{Blake2s as B2s};
 #[cfg(feature = "r1cs")]
 pub mod constraints;
@@ -157,6 +157,55 @@ impl CRHScheme for Blake2s {
         result.copy_from_slice(&h.finalize());
 	Ok(result.to_vec())
         
+    }
+}
+impl TwoToOneCRHScheme for TwoToOneBlake2s {
+    //stub
+    type Input = Vec<u8>;
+    type Output = Vec<u8>;
+    type Parameters = Blake2Params;
+
+    fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
+	//use rng to make seed of [u8;32]
+	Blake2s::setup(rng)
+    }
+
+    fn evaluate<T: Borrow<Self::Input>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        let left_input = left_input.borrow();
+        let right_input = right_input.borrow();
+        assert_eq!(
+            left_input.len(),
+            right_input.len(),
+            "left and right input should be of equal length"
+        );
+        // check overflow
+/*
+        debug_assert!(left_input.len() * 8 <= Self::HALF_INPUT_SIZE_BITS);
+*/
+        let mut buffer = vec![0u8; (left_input.len() + right_input.len()) / 8];
+
+        buffer
+            .iter_mut()
+            .zip(left_input.iter().chain(right_input.iter()))
+            .for_each(|(b, l_b)| *b = *l_b);
+
+        Blake2s::evaluate(parameters, buffer)
+    }
+    fn compress<T: Borrow<Self::Output>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, Error> {
+        Self::evaluate(
+            parameters,
+            crate::to_unchecked_bytes!(left_input)?,
+            crate::to_unchecked_bytes!(right_input)?,
+        )
+
     }
 }
 pub struct TwoToOneCRH<C: ProjectiveCurve, W: Window> {
