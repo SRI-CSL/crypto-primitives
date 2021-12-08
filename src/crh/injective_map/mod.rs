@@ -10,7 +10,7 @@ use ark_ec::{
     twisted_edwards_extended::{GroupAffine as TEAffine, GroupProjective as TEProjective},
     ProjectiveCurve,
 };
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+
 use ark_std::borrow::Borrow;
 use ark_std::vec::Vec;
 #[cfg(feature = "r1cs")]

@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use ark_ff::bytes::ToBytes;
+use ark_ff::bytes::{ToBytes, FromBytes};
 use ark_std::hash::Hash;
 use ark_std::rand::Rng;
 pub mod bowe_hopwood;
@@ -55,7 +55,7 @@ pub trait TwoToOneCRHScheme {
         + Default
         + CanonicalSerialize
         + CanonicalDeserialize;
-    type Parameters: Clone + Default;
+    type Parameters: Clone;
 
 
     fn setup<R: Rng>(r: &mut R) -> Result<Self::Parameters, Error>;

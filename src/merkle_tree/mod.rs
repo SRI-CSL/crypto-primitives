@@ -54,7 +54,6 @@ impl<T: CanonicalSerialize + ToBytes> DigestConverter<T, [u8]> for ByteDigestCon
 /// * `TwoLeavesToOneHash`: Convert two leaf digests to one inner digest. This one can be a wrapped
 /// version `TwoHashesToOneHash`, which first converts leaf digest to inner digest.
 /// * `TwoHashesToOneHash`: Compress two inner digests to one inner digest
->>>>>>> upstream/main
 pub trait Config {
     type Leaf: ?Sized; // merkle tree does not store the leaf
                        // leaf layer
@@ -113,88 +112,12 @@ pub type LeafParam<P> = <<P as Config>::LeafHash as CRHScheme>::Parameters;
     Debug(bound = "P: Config"),
     Default(bound = "P: Config")
 )]
->>>>>>> upstream/main
 pub struct Path<P: Config> {
     pub leaf_sibling_hash: P::LeafDigest,
     /// The sibling of path node ordered from higher layer to lower layer (does not include root node).
     pub auth_path: Vec<P::InnerDigest>,
     /// stores the leaf index of the node
     pub leaf_index: usize,
-}
-impl<C:Config> Path<C>{
-    pub fn get_length(&self) -> usize{
-	self.path.len()
-    }
-    pub fn get_path(&self) -> Vec<(Digest<C>,Digest<C>)>{
-	let path = self.clone();
-	path.path
-    }
-    pub fn set_path(path : Vec<(Digest<C>,Digest<C>)>) -> Self{
-	Path{
-	    path: path
-	}
-    }
-}
-impl<C:Config> PartialEq for Path<C>{
-    fn eq(&self, other: &Self) -> bool {
-	self.path == other.path
-    }
-}
-impl<C:Config> Eq for Path<C> {}
-impl<C:Config> ToBytes for Path<C>{
-    fn  write<W:Write>(&self,mut writer:W) -> ark_std::io::Result<()>{
-	for p in &self.path{
-	    p.0.write(&mut writer)?;
-	    p.1.write(&mut writer)?;
-	}
-	Ok(())
-    }
-}
-
-
-impl<C:Config> Clone for Path<C>{
-    //clone will clone each digest
-    fn clone(&self) -> Self{
-	let mut output = Vec::new();
-	for s in &self.path{
-	    output.push((s.0.clone(),s.1.clone()));
-	}
-	Path{
-	    path: output
-	}
-    }
-}
-
-impl<C:Config> FromBytes for Path<C>{
-    fn read<R:Read>(mut reader:R) -> IoResult<Self>{
-	let mut pre_output = Digest::<C>::read(&mut reader)?;
-	
-	let mut output_vec:Vec<Digest<C>> = Vec::new();
-	let mut output_1 = Some(pre_output);
-	while let Some(o) = output_1{
-	    output_vec.push(o);
-	    output_1 = Digest::<C>::read(&mut reader).ok();
-	}
-	
-	//now split into pairs
-	let mut pairs = Vec::new();
-	let mut i = 0;
-	assert_eq!(pairs.len() % 2, 0);
-	let mut length;
-	if(output_vec.len() == 0){
-	    length = 0;
-	}
-	else{
-	    length = output_vec.len() - 1;
-	}
-	while i < length{
-	    pairs.push((output_vec[i].clone(),output_vec[i+1].clone()));
-	    i = i + 2;
-	}
-	Ok(Path{
-	    path:pairs
-	})
-    }
 }
 
 impl<P: Config> Path<P> {

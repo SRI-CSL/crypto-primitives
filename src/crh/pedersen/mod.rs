@@ -12,7 +12,7 @@ use rayon::prelude::*;
 use crate::crh::{CRHScheme, TwoToOneCRHScheme};
 use ark_ec::ProjectiveCurve;
 use ark_ff::{Field, ToConstraintField};
-use ark_serialize::CanonicalSerialize;
+
 use ark_std::borrow::Borrow;
 use ark_std::cfg_chunks;
 use crate::prf::blake2s::Blake2s;
@@ -137,8 +137,8 @@ pub struct Blake2Params{
 
 impl CRHScheme for Blake2s {
     //stub
-    type Input = [u8;32];
-    type Output = [u8;32];
+    type Input = Vec<u8>;
+    type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
     fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
@@ -147,13 +147,15 @@ impl CRHScheme for Blake2s {
         Ok(Blake2Params { seed })
     }
 
-    fn evaluate(parameters: &Self::Parameters, input: &[u8]) -> Result<Self::Output, Error> {
+    fn evaluate<T: Borrow<Self::Input>>(parameters: &Self::Parameters, input: T) -> Result<Self::Output, Error> {
         let mut h = B2s::new();
         h.update(parameters.seed.as_ref());
-        h.update(input.as_ref());
+	//convert input to [u8;32]
+	let input_c = &input.borrow()[..];
+        h.update(input_c.as_ref());
         let mut result = [0u8;32];
         result.copy_from_slice(&h.finalize());
-	Ok(result)
+	Ok(result.to_vec())
         
     }
 }

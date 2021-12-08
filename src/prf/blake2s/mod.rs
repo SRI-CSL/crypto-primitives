@@ -3,7 +3,6 @@ use ark_std::convert::TryFrom;
 use blake2::{Blake2s as B2s, VarBlake2s};
 use digest::Digest;
 use ark_serialize::*;
-use ark_serialize_derive::*;
 use super::PRF;
 use crate::CryptoError;
 
