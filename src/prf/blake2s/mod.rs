@@ -9,7 +9,7 @@ use crate::CryptoError;
 #[cfg(feature = "r1cs")]
 pub mod constraints;
 
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug)]
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug,Default)]
 pub struct Blake2s;
 
 impl PRF for Blake2s {
