@@ -137,7 +137,7 @@ pub struct Blake2Params{
 
 impl CRHScheme for Blake2s {
     //stub
-    type Input = Vec<u8>;
+    type Input = [u8];
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
@@ -151,8 +151,8 @@ impl CRHScheme for Blake2s {
         let mut h = B2s::new();
         h.update(parameters.seed.as_ref());
 	//convert input to [u8;32]
-	let input_c = &input.borrow()[..];
-        h.update(input_c.as_ref());
+
+        h.update(input.borrow());
         let mut result = [0u8;32];
         result.copy_from_slice(&h.finalize());
 	Ok(result.to_vec())
