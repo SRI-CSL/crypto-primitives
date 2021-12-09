@@ -1,4 +1,4 @@
-use crate::crh::ToBytes;
+use ark_ff::bytes::ToBytes;
 use crate::{Error, Vec};
 use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use digest::Digest;

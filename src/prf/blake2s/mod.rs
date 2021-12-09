@@ -1,5 +1,5 @@
 use crate::Vec;
-use crate::prf::ToBytes;
+use ark_ff::bytes::ToBytes;
 use ark_std::{convert::TryFrom,fmt::Debug};
 use blake2::{Blake2s as B2s, VarBlake2s};
 use digest::Digest;
