@@ -1,5 +1,6 @@
 use ark_ff::bytes::ToBytes;
 use crate::{Error, Vec};
+use ark_std::ops::Add;
 use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use digest::Digest;
 use ark_std::{rand::Rng,io::{Read,Write}};
@@ -138,7 +139,7 @@ pub struct Blake2Params{
 
 impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default> CRHScheme for Blake2s<F> {
     //stub
-    type Input = Vec<F>;
+    type Input = F;
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
@@ -161,9 +162,9 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
         
     }
 }
-impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default> TwoToOneCRHScheme for TwoToOneBlake2s<F> {
+impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default + Add<Output = F>> TwoToOneCRHScheme for TwoToOneBlake2s<F> {
     //stub
-    type Input = Vec<F>;
+    type Input = F;
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
@@ -179,7 +180,7 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
     ) -> Result<Self::Output, Error> {
 	let mut left:Self::Input = left_input.borrow().clone();
 	let mut right:Self::Input = right_input.borrow().clone();
-	left.append(&mut right);
+	left = left + right;
         Blake2s::<F>::evaluate(parameters, left.borrow())
     }
     fn compress<T: Borrow<Self::Output>>(
