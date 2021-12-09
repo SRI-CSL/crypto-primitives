@@ -1,5 +1,6 @@
 use crate::Vec;
-use ark_std::convert::TryFrom;
+use crate::prf::ToBytes;
+use ark_std::{convert::TryFrom,fmt::Debug};
 use blake2::{Blake2s as B2s, VarBlake2s};
 use digest::Digest;
 use ark_serialize::*;
@@ -10,10 +11,14 @@ use crate::CryptoError;
 pub mod constraints;
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug,Default)]
-pub struct Blake2s;
+pub struct Blake2s<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default>{
+    _shadow:F
+}
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize,Debug,Default)]
-pub struct TwoToOneBlake2s;
-impl PRF for Blake2s {
+pub struct TwoToOneBlake2s<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default>{
+    _shadow:F
+}
+impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default> PRF for Blake2s<F> {
     type Input = [u8; 32];
     type Output = [u8; 32];
     type Seed = [u8; 32];

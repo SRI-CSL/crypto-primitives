@@ -1,3 +1,4 @@
+use crate::crh::ToBytes;
 use crate::{Error, Vec};
 use ark_serialize::{CanonicalSerialize,SerializationError,CanonicalDeserialize};
 use digest::Digest;
@@ -135,9 +136,9 @@ pub struct Blake2Params{
     seed: [u8;32]
 }
 
-impl CRHScheme for Blake2s {
+impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default> CRHScheme for Blake2s<F> {
     //stub
-    type Input = [u8];
+    type Input = Vec<F>;
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
@@ -151,23 +152,24 @@ impl CRHScheme for Blake2s {
         let mut h = B2s::new();
         h.update(parameters.seed.as_ref());
 	//convert input to [u8;32]
-
-        h.update(input.borrow());
+	let mut input_b = Vec::new();
+	input.borrow().write(&mut input_b);
+        h.update(&input_b[..]);
         let mut result = [0u8;32];
         result.copy_from_slice(&h.finalize());
 	Ok(result.to_vec())
         
     }
 }
-impl TwoToOneCRHScheme for TwoToOneBlake2s {
+impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default> TwoToOneCRHScheme for TwoToOneBlake2s<F> {
     //stub
-    type Input = Vec<u8>;
+    type Input = Vec<F>;
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
     fn setup<R: Rng>(rng: &mut R) -> Result<Self::Parameters, Error> {
 	//use rng to make seed of [u8;32]
-	Blake2s::setup(rng)
+	Blake2s::<F>::setup(rng)
     }
 
     fn evaluate<T: Borrow<Self::Input>>(
@@ -175,37 +177,23 @@ impl TwoToOneCRHScheme for TwoToOneBlake2s {
         left_input: T,
         right_input: T,
     ) -> Result<Self::Output, Error> {
-        let left_input = left_input.borrow();
-        let right_input = right_input.borrow();
-        assert_eq!(
-            left_input.len(),
-            right_input.len(),
-            "left and right input should be of equal length"
-        );
-        // check overflow
-/*
-        debug_assert!(left_input.len() * 8 <= Self::HALF_INPUT_SIZE_BITS);
-*/
-        let mut buffer = vec![0u8; (left_input.len() + right_input.len()) / 8];
-
-        buffer
-            .iter_mut()
-            .zip(left_input.iter().chain(right_input.iter()))
-            .for_each(|(b, l_b)| *b = *l_b);
-
-        Blake2s::evaluate(parameters, buffer)
+	let mut left:Self::Input = left_input.borrow().clone();
+	let mut right:Self::Input = right_input.borrow().clone();
+	left.append(&mut right);
+        Blake2s::<F>::evaluate(parameters, left.borrow())
     }
     fn compress<T: Borrow<Self::Output>>(
         parameters: &Self::Parameters,
         left_input: T,
         right_input: T,
     ) -> Result<Self::Output, Error> {
-        Self::evaluate(
-            parameters,
-            crate::to_unchecked_bytes!(left_input)?,
-            crate::to_unchecked_bytes!(right_input)?,
-        )
-
+        let mut h = B2s::new();
+        h.update(parameters.seed.as_ref());
+        h.update(left_input.borrow());
+	h.update(right_input.borrow());
+        let mut result = [0u8;32];
+        result.copy_from_slice(&h.finalize());
+	Ok(result.to_vec())
     }
 }
 pub struct TwoToOneCRH<C: ProjectiveCurve, W: Window> {
