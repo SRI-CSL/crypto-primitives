@@ -27,6 +27,7 @@ pub struct IdentityDigestConverter<T> {
     _prev_layer_digest: T,
 }
 
+
 impl<T> DigestConverter<T, T> for IdentityDigestConverter<T> {
     type TargetType = T;
     fn convert(item: T) -> Result<T, Error> {
@@ -46,6 +47,21 @@ impl<T: CanonicalSerialize + ToBytes> DigestConverter<T, [u8]> for ByteDigestCon
     fn convert(item: T) -> Result<Self::TargetType, Error> {
         // TODO: In some tests, `serialize` is not consistent with constraints. Try fix those.
         Ok(crate::to_unchecked_bytes!(item)?)
+    }
+}
+pub struct GenericLeafDigestConverter<T: CanonicalDeserialize + CanonicalSerialize + ToBytes> {
+    _prev_layer_digest: T
+}
+impl<T: CanonicalDeserialize + CanonicalSerialize + ToBytes> DigestConverter<Vec<u8>, T> for GenericLeafDigestConverter<T> {
+    type TargetType = T;
+
+    fn convert(item: Vec<u8>) -> Result<Self::TargetType, Error> {
+        // TODO: In some tests, `serialize` is not consistent with constraints. Try fix those.
+	let mut bytes:&[u8] = &item[..];
+	let result = T::deserialize(&mut bytes).ok().unwrap();
+	Ok(result)
+
+	
     }
 }
 
