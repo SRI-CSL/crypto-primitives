@@ -136,11 +136,22 @@ pub struct Path<P: Config> {
     pub leaf_index: usize,
 }
 
+
 impl<P: Config> Path<P> {
     /// The position of on_path node in `leaf_and_sibling_hash` and `non_leaf_and_sibling_hash_path`.
     /// `position[i]` is 0 (false) iff `i`th on-path node from top to bottom is on the left.
     ///
     /// This function simply converts `self.leaf_index` to boolean array in big endian form.
+    pub fn get_length(&self) -> usize{
+	self.auth_path.len()
+    }
+    pub fn set_path(leaf_sibling_hash: P::LeafDigest, auth_path: Vec<P::InnerDigest>, leaf_index: usize) -> Self {
+	Path {
+	    leaf_sibling_hash,
+	    auth_path,
+	    leaf_index
+	}
+    }
     #[allow(unused)] // this function is actually used when r1cs feature is on
     fn position_list(&'_ self) -> impl '_ + Iterator<Item = bool> {
         (0..self.auth_path.len() + 1)
