@@ -136,7 +136,11 @@ pub struct Path<P: Config> {
     pub leaf_index: usize,
 }
 
-
+impl<P: Config> PartialEq for Path<P>{
+    fn eq(&self, other:&Self) -> bool{
+	self.leaf_sibling_hash == other.leaf_sibling_hash && self.auth_path == other.auth_path && self.leaf_index == other.leaf_index
+    }
+}
 impl<P: Config> Path<P> {
     /// The position of on_path node in `leaf_and_sibling_hash` and `non_leaf_and_sibling_hash_path`.
     /// `position[i]` is 0 (false) iff `i`th on-path node from top to bottom is on the left.
