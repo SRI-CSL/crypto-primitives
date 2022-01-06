@@ -58,7 +58,7 @@ impl<T: CanonicalDeserialize + CanonicalSerialize + ToBytes> DigestConverter<Vec
     fn convert(item: Vec<u8>) -> Result<Self::TargetType, Error> {
         // TODO: In some tests, `serialize` is not consistent with constraints. Try fix those.
 	let mut bytes:&[u8] = &item[..];
-	println!("bytes {:?}", bytes);
+
 	let result = T::deserialize(&mut bytes).ok().unwrap();
 	Ok(result)
 
