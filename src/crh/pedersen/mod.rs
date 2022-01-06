@@ -151,7 +151,7 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
 
     fn evaluate<T: Borrow<Self::Input>>(parameters: &Self::Parameters, input: T) -> Result<Self::Output, Error> {
         let mut h = B2s::new();
-        h.update(parameters.seed.as_ref());
+//        h.update(parameters.seed.as_ref());
 	//convert input to [u8;32]
 	let mut input_b = Vec::new();
 	input.borrow().write(&mut input_b);
