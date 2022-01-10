@@ -151,7 +151,7 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
 
     fn evaluate<T: Borrow<Self::Input>>(parameters: &Self::Parameters, input: T) -> Result<Self::Output, Error> {
         let mut h = B2s::new();
-//        h.update(parameters.seed.as_ref());
+        h.update(parameters.seed.as_ref());
 	//convert input to [u8;32]
 	let mut input_b = Vec::new();
 	input.borrow().write(&mut input_b);
@@ -164,7 +164,7 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
 }
 impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Default + Add<Output = F>> TwoToOneCRHScheme for TwoToOneBlake2s<F> {
     //stub
-    type Input = F;
+    type Input = Vec<u8>;
     type Output = Vec<u8>;
     type Parameters = Blake2Params;
 
@@ -180,8 +180,12 @@ impl<F:ToBytes + Clone + CanonicalSerialize + CanonicalDeserialize + Debug + Def
     ) -> Result<Self::Output, Error> {
 	let mut left:Self::Input = left_input.borrow().clone();
 	let mut right:Self::Input = right_input.borrow().clone();
-	left = left + right;
-        Blake2s::<F>::evaluate(parameters, left.borrow())
+	left.append(&mut right);
+        let mut h = B2s::new();
+        h.update(&left[..]);
+        let mut result = [0u8;32];
+        result.copy_from_slice(&h.finalize());
+	Ok(result.to_vec())
     }
     fn compress<T: Borrow<Self::Output>>(
         parameters: &Self::Parameters,
