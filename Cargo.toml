@@ -15,20 +15,22 @@ edition = "2018"
 ################################# Dependencies ################################
 
 [dependencies]
-ark-ff = { version = "^0.3.0", default-features = false }
-ark-ec = { version = "^0.3.0", default-features = false }
-ark-std = { version = "^0.3.0", default-features = false }
-ark-relations = { version = "^0.3.0", default-features = false }
-ark-serialize = { version = "^0.3.0", default-features = false, features = [ "derive" ] }
-ark-sponge = { version = "^0.3.0", default-features = false }
+ark-ff = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri", default-features=false, features=["asm","parallel"] }
+ark-ec = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri", default-features=false }
+ark-std = {version = "0.2.1-alpha.0", git = "https://github.com/SRI-CSL/utils", default-features = false}
+ark-relations = {git = "https://github.com/SRI-CSL/snark", branch = "v3_sri", default-features=false }
+ark-serialize = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri",  default-features=false , features = ["derive"] } 
+
+ark-sponge = { git = "https://github.com/SRI-CSL/sponge", default-features = false }
 
 blake2 = { version = "0.9", default-features = false }
 digest = "0.9"
+ark-r1cs-std = {git = "https://github.com/SRI-CSL/r1cs-std", branch = "v3_sri",  default-features=false, optional = true } 
+ark-snark = {git = "https://github.com/SRI-CSL/snark", branch = "v3_sri", default-features=false }
 
-ark-r1cs-std = { version = "^0.3.0", optional = true, default-features = false }
-ark-snark = { version = "^0.3.0", default-features = false }
 
-ark-nonnative-field = { version = "^0.3.0", optional = true, default-features = false }
+
+ark-nonnative-field = {git = "https://github.com/SRI-CSL/nonnative", branch = "v3_sri", default-features=false, optional = true }
 
 rayon = { version = "1.0", optional = true }
 derivative = { version = "2.0", features = ["use_core"] }
@@ -42,7 +44,7 @@ parallel = [ "std", "rayon", "ark-ec/parallel", "ark-std/parallel", "ark-ff/para
 r1cs = [ "ark-r1cs-std", "tracing", "ark-nonnative-field", "ark-sponge/r1cs" ]
 
 [dev-dependencies]
-ark-ed-on-bls12-381 = { version = "^0.3.0", default-features = false, features = [ "r1cs" ] }
-ark-bls12-377 = { version = "^0.3.0", default-features = false, features = [ "curve", "r1cs" ] }
-ark-mnt4-298 = { version = "^0.3.0", default-features = false, features = [ "curve", "r1cs" ] }
-ark-mnt6-298 = { version = "^0.3.0", default-features = false, features = [ "r1cs" ] }
+ark-ed-on-bls12-381 =  { git = "https://github.com/SRI-CSL/curves", default-features = false, features = [ "r1cs" ], branch = "v3_sri" }
+ark-bls12-377 = { git = "https://github.com/SRI-CSL/curves", default-features = false, features = [ "r1cs" ], branch = "v3_sri" }
+ark-mnt4-298 = { git = "https://github.com/SRI-CSL/curves", default-features = false, features = [ "r1cs" ], branch = "v3_sri" }
+ark-mnt6-298 = { git = "https://github.com/SRI-CSL/curves", default-features = false, features = [ "r1cs" ], branch = "v3_sri" }
