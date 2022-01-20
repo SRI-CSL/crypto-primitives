@@ -15,7 +15,7 @@ edition = "2018"
 ################################# Dependencies ################################
 
 [dependencies]
-ark-ff = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri", default-features=false, features=["asm","parallel"] }
+ark-ff = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri", default-features=false }
 ark-ec = {git = "https://github.com/SRI-CSL/algebra", branch = "v3_sri", default-features=false }
 ark-std = {version = "0.2.1-alpha.0", git = "https://github.com/SRI-CSL/utils", default-features = false}
 ark-relations = {git = "https://github.com/SRI-CSL/snark", branch = "v3_sri", default-features=false }
