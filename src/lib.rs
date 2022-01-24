@@ -29,9 +29,9 @@ pub mod commitment;
 pub mod crh;
 pub mod merkle_tree;
 
-pub mod encryption;
+//pub mod encryption;
 pub mod prf;
-pub mod signature;
+//pub mod signature;
 pub mod snark;
 
 pub use self::{
@@ -39,7 +39,7 @@ pub use self::{
     crh::CRHScheme,
     merkle_tree::{MerkleTree, Path},
     prf::PRF,
-    signature::SignatureScheme,
+//    signature::SignatureScheme,
     snark::{CircuitSpecificSetupSNARK, UniversalSetupSNARK, SNARK},
 };
 
